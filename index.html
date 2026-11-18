@@ -1,1 +1,1911 @@
-# Routine-Planner
+<!DOCTYPE html>
+
+<html lang="th">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+
+<meta name="theme-color" content="#f5f7fb">
+
+<title>Flexible Daily Routine Planner</title>
+
+<style>
+
+:root {
+
+  --bg:#f4f6fb;
+
+  --ink:#243047;
+
+  --muted:#77839a;
+
+  --line:#dce3ee;
+
+  --accent:#647ee8;
+
+  --panel:rgba(255,255,255,.78);
+
+  --hour:64px;
+
+  --shadow:0 8px 24px rgba(44,61,94,.09);
+
+}
+
+* {box-sizing:border-box}
+
+html,body {
+
+  margin:0;height:100%;
+
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+  color:var(--ink);background:var(--bg);
+
+}
+
+body {overflow:hidden}
+
+.app {
+
+  height:100dvh;display:flex;flex-direction:column;
+
+  padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+
+  gap:9px;
+
+}
+
+header {flex:none}
+
+.topline {
+
+  display:flex;align-items:center;justify-content:space-between;
+
+  gap:8px;padding:6px 2px;
+
+}
+
+.brand {font-weight:800;font-size:clamp(16px,2vw,21px)}
+
+.brand small {
+
+  display:block;font-size:11px;color:var(--muted);
+
+  font-weight:500;
+
+}
+
+.toolbar {
+
+  display:flex;align-items:center;gap:7px;
+
+  flex-wrap:wrap;justify-content:flex-end;
+
+}
+
+button {
+
+  border:1px solid #dfe5ef;background:#fff;
+
+  color:#394762;border-radius:11px;padding:9px 12px;
+
+  font:600 13px inherit;cursor:pointer;
+
+  box-shadow:0 2px 7px rgba(39,57,91,.04);
+
+  touch-action:manipulation;
+
+}
+
+button:active {transform:scale(.98)}
+
+button.primary {background:#657ee8;color:white;border-color:#657ee8}
+
+button.danger {color:#c14c64}
+
+.toggle {
+
+  display:flex;align-items:center;gap:6px;
+
+  font-size:12px;color:#64718a;background:#fff;
+
+  border:1px solid #dfe5ef;padding:7px 10px;border-radius:11px;
+
+}
+
+.toggle input {accent-color:#657ee8;width:16px;height:16px}
+
+.tabs {
+
+  display:flex;gap:7px;overflow-x:auto;
+
+  padding:2px 1px 5px;scrollbar-width:none;
+
+}
+
+.tabs::-webkit-scrollbar {display:none}
+
+.tab {
+
+  white-space:nowrap;border-radius:10px;padding:8px 13px;
+
+  font-size:13px;background:rgba(255,255,255,.65);
+
+}
+
+.tab.active {background:#e8edff;border-color:#cbd5ff;color:#4059bd}
+
+.workspace {
+
+  flex:1;min-height:0;
+
+  display:grid;grid-template-columns:minmax(0,3fr) minmax(220px,1fr);
+
+  gap:10px;
+
+}
+
+.timeline-panel,.side-panel {
+
+  min-height:0;background:var(--panel);
+
+  border:1px solid rgba(255,255,255,.9);
+
+  border-radius:18px;box-shadow:var(--shadow);
+
+  backdrop-filter:blur(16px);
+
+  -webkit-backdrop-filter:blur(16px);overflow:hidden;
+
+}
+
+.timeline-scroll {
+
+  height:100%;overflow:auto;overscroll-behavior:contain;
+
+  position:relative;scrollbar-width:thin;
+
+}
+
+.timeline {
+
+  position:relative;min-height:calc(var(--hour)*24);
+
+  margin-left:58px;margin-right:8px;
+
+}
+
+.hour-row {height:var(--hour);position:relative;border-top:1px solid #cfd8e6}
+
+.hour-row:before,.hour-row:after {
+
+  content:"";position:absolute;left:0;right:0;
+
+  border-top:1px dashed rgba(153,167,190,.48);
+
+  pointer-events:none;
+
+}
+
+.hour-row:before {top:25%}
+
+.hour-row:after {top:50%}
+
+.quarter {
+
+  position:absolute;left:0;right:0;top:75%;
+
+  border-top:1px dashed rgba(153,167,190,.48);
+
+  pointer-events:none;
+
+}
+
+.hour-label {
+
+  position:absolute;left:-54px;top:-9px;width:44px;
+
+  text-align:right;font-size:11px;color:#7b879b;
+
+}
+
+.hour-row:last-child {border-bottom:1px solid #cfd8e6}
+
+.activity {
+
+  position:absolute;border:1px solid rgba(255,255,255,.9);
+
+  border-radius:11px;
+
+  box-shadow:0 4px 13px rgba(40,55,85,.11);
+
+  backdrop-filter:blur(12px);
+
+  -webkit-backdrop-filter:blur(12px);
+
+  overflow:hidden;min-height:15px;
+
+  touch-action:none;user-select:none;
+
+  -webkit-user-select:none;cursor:grab;z-index:3;
+
+}
+
+.activity:active {cursor:grabbing}
+
+.activity.selected {outline:2px solid #657ee8;z-index:8}
+
+.activity .inner {padding:8px;pointer-events:none;overflow:hidden}
+
+.activity .name {font-size:12px;font-weight:750;overflow-wrap:anywhere}
+
+.activity .time {font-size:10px;color:#526078;margin-top:3px}
+
+.handle {
+
+  position:absolute;left:0;right:0;height:12px;
+
+  z-index:5;touch-action:none;cursor:ns-resize;
+
+}
+
+.handle.top {top:0}
+
+.handle.bottom {bottom:0}
+
+.current-line {
+
+  position:absolute;left:0;right:0;
+
+  border-top:2px solid #ed6b79;z-index:9;
+
+  pointer-events:none;
+
+}
+
+.current-line span {
+
+  position:absolute;right:0;top:-19px;
+
+  background:#ed6b79;color:white;border-radius:5px;
+
+  padding:2px 6px;font-size:10px;font-weight:700;
+
+}
+
+.side-panel {
+
+  display:flex;flex-direction:column;padding:13px;
+
+  gap:10px;overflow:auto;
+
+}
+
+.side-title {font-size:15px;font-weight:800}
+
+.hint {font-size:11px;color:var(--muted);line-height:1.5}
+
+.field {display:flex;flex-direction:column;gap:5px}
+
+.field label {font-size:11px;color:#68758c;font-weight:700}
+
+.field input,.field select {
+
+  width:100%;border:1px solid #dce3ee;border-radius:10px;
+
+  padding:10px;background:rgba(255,255,255,.85);
+
+  font:14px inherit;color:var(--ink);min-width:0;
+
+}
+
+.duration {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.color-row {display:flex;gap:7px;flex-wrap:wrap}
+
+.swatch {
+
+  width:27px;height:27px;border-radius:50%;
+
+  border:2px solid white;box-shadow:0 0 0 1px #d3dbe8;
+
+  cursor:pointer;
+
+}
+
+.swatch.active {box-shadow:0 0 0 2px #526fe0}
+
+.bake {width:100%;padding:12px}
+
+.tray-head {display:flex;align-items:center;justify-content:space-between}
+
+.tray {
+
+  display:flex;flex-direction:column;gap:7px;min-height:80px;
+
+  padding:8px;border:1px dashed #d4ddeb;border-radius:13px;
+
+  background:rgba(245,248,253,.65);
+
+}
+
+.tray-card {
+
+  border:1px solid rgba(255,255,255,.9);border-radius:10px;
+
+  padding:9px 10px;box-shadow:0 3px 9px rgba(40,55,85,.08);
+
+  touch-action:none;cursor:grab;display:flex;
+
+  justify-content:space-between;gap:6px;align-items:center;
+
+  user-select:none;
+
+}
+
+.tray-card strong {font-size:12px}
+
+.tray-card small {font-size:10px;color:#5e6b83}
+
+.empty {font-size:11px;color:#9aa5b7;text-align:center;padding:13px 4px}
+
+.status {font-size:11px;color:#66738a;line-height:1.4;min-height:30px}
+
+.overlay {
+
+  position:fixed;inset:0;background:rgba(29,39,60,.25);
+
+  display:none;align-items:center;justify-content:center;
+
+  padding:18px;z-index:30;
+
+}
+
+.overlay.show {display:flex}
+
+.modal {
+
+  width:min(360px,100%);background:white;
+
+  border:1px solid #e4e9f2;border-radius:18px;
+
+  padding:17px;box-shadow:0 18px 55px rgba(32,46,76,.22);
+
+  display:flex;flex-direction:column;gap:12px;
+
+}
+
+.modal h3 {margin:0;font-size:16px}
+
+.modal-actions {display:flex;gap:8px;flex-wrap:wrap}
+
+.modal-actions button {flex:1}
+
+.context-menu {
+
+  position:fixed;z-index:25;display:none;background:white;
+
+  border:1px solid #e2e7f0;border-radius:13px;padding:7px;
+
+  box-shadow:0 12px 30px rgba(35,49,77,.18);min-width:165px;
+
+}
+
+.context-menu.show {display:flex;flex-direction:column;gap:4px}
+
+.context-menu button {box-shadow:none;text-align:left;border:0}
+
+.drag-ghost {
+
+  position:fixed;z-index:50;pointer-events:none;opacity:.9;
+
+  box-shadow:0 10px 25px rgba(35,49,77,.2);
+
+  border-radius:10px;padding:9px;font-size:12px;
+
+  font-weight:700;max-width:180px;
+
+}
+
+.merge-banner {
+
+  display:none;background:#fff2d9;color:#805b13;
+
+  border:1px solid #f1dcae;padding:9px 11px;
+
+  border-radius:10px;font-size:12px;
+
+}
+
+.merge-banner.show {display:block}
+
+@media(max-width:760px) {
+
+  .app {padding-left:7px;padding-right:7px;gap:6px}
+
+  .topline {align-items:flex-start}
+
+  .brand {font-size:15px}
+
+  .toolbar {gap:5px}
+
+  .toolbar button {padding:8px 9px;font-size:11px}
+
+  .workspace {grid-template-columns:minmax(0,2.3fr) minmax(145px,1fr);gap:6px}
+
+  .side-panel {padding:9px;gap:8px}
+
+  .activity .inner {padding:6px}
+
+  .activity .name {font-size:10px}
+
+  .activity .time {font-size:9px}
+
+}
+
+@media(max-width:480px) {
+
+  .workspace {grid-template-columns:minmax(0,1.8fr) minmax(128px,1fr)}
+
+  .timeline {margin-left:48px}
+
+  .hour-label {left:-45px;width:37px;font-size:10px}
+
+  .side-panel {padding:7px}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+ <div class="topline">
+
+  <div class="brand">
+
+    ✦ Routine Studio
+
+    <small>Flexible Daily Routine Planner · 24 hours</small>
+
+  </div>
+
+  <div class="toolbar">
+
+   <button id="undoBtn">↶ Undo</button>
+
+   <label class="toggle">
+
+    <input id="nowToggle" type="checkbox" checked>
+
+    <span>เวลาปัจจุบัน</span>
+
+   </label>
+
+   <button id="newTabBtn" class="primary">＋ รูทีน</button>
+
+  </div>
+
+ </div>
+
+ <nav class="tabs" id="tabs"></nav>
+
+</header>
+
+<div class="merge-banner" id="mergeBanner">
+
+โหมดรวมกล่อง: แตะกิจกรรมอีกกล่องเพื่อรวม หรือกดยกเลิก
+
+</div>
+
+<main class="workspace">
+
+ <section class="timeline-panel">
+
+  <div class="timeline-scroll" id="timelineScroll">
+
+   <div class="timeline" id="timeline">
+
+    <div id="hours"></div>
+
+    <div id="activities"></div>
+
+    <div class="current-line" id="currentLine">
+
+      <span id="currentLabel"></span>
+
+    </div>
+
+   </div>
+
+  </div>
+
+ </section>
+
+ <aside class="side-panel">
+
+  <div>
+
+   <div class="side-title">🧁 เครื่องทำเค้ก</div>
+
+   <div class="hint">สร้างบล็อกกิจกรรม แล้วลากลงบนเส้นเวลาได้เลย</div>
+
+  </div>
+
+  <div class="field">
+
+   <label for="activityName">ชื่อกิจกรรม</label>
+
+   <input id="activityName" maxlength="50" placeholder="เช่น อ่านหนังสือ">
+
+  </div>
+
+  <div class="field">
+
+   <label>ระยะเวลา</label>
+
+   <div class="duration">
+
+    <input id="hoursInput" type="number" min="0" max="24" step="0.25" value="1" aria-label="ชั่วโมง">
+
+    <input id="minutesInput" type="number" min="0" max="45" step="15" value="0" aria-label="นาที">
+
+   </div>
+
+   <div class="hint">นาทีเลือก 0, 15, 30 หรือ 45</div>
+
+  </div>
+
+  <div class="field">
+
+   <label>สีพาสเทล</label>
+
+   <div class="color-row" id="palette"></div>
+
+  </div>
+
+  <button class="primary bake" id="bakeBtn">＋ สร้างกล่อง (Bake)</button>
+
+  <div class="tray-head">
+
+   <strong style="font-size:13px">ถาดพักกล่อง</strong>
+
+   <span id="trayCount" class="hint">0 กล่อง</span>
+
+  </div>
+
+  <div class="tray" id="tray">
+
+   <div class="empty">ยังไม่มีกล่อง<br>สร้างกิจกรรมด้านบนได้เลย</div>
+
+  </div>
+
+  <div class="status" id="status">
+
+    เคล็ดลับ: แตะกล่องเพื่อแก้ไข · กดค้าง 0.5 วินาทีเพื่อรวมกล่อง
+
+  </div>
+
+ </aside>
+
+</main>
+
+</div>
+
+<div class="overlay" id="editOverlay">
+
+ <div class="modal">
+
+  <h3>แก้ไขกิจกรรม</h3>
+
+  <div class="field">
+
+   <label>ชื่อกิจกรรม</label>
+
+   <input id="editName" maxlength="50">
+
+  </div>
+
+  <div class="field">
+
+   <label>สี</label>
+
+   <div class="color-row" id="editPalette"></div>
+
+  </div>
+
+  <div class="field">
+
+   <label>เวลาเริ่มต้น</label>
+
+   <input id="editStart" type="time" step="900">
+
+  </div>
+
+  <div class="field">
+
+   <label>ระยะเวลา (นาที)</label>
+
+   <input id="editDuration" type="number" min="15" max="1440" step="15">
+
+  </div>
+
+  <div class="modal-actions">
+
+   <button id="saveEdit" class="primary">บันทึก</button>
+
+   <button id="deleteActivity" class="danger">ลบกล่อง</button>
+
+   <button id="closeEdit">ปิด</button>
+
+  </div>
+
+ </div>
+
+</div>
+
+<div class="context-menu" id="contextMenu">
+
+ <button id="mergeAction">⧉ รวมกล่อง (Merge)</button>
+
+ <button id="editAction">✎ แก้ไข</button>
+
+ <button id="deleteAction" class="danger">ลบกิจกรรม</button>
+
+</div>
+
+<script>
+
+(() => {
+
+'use strict';
+
+const STORAGE_KEY = 'flexibleRoutinePlanner.v1';
+
+const HOUR_HEIGHT = 64;
+
+const STEP = 15;
+
+const DAY = 1440;
+
+let selectedColor = 'rgba(181,220,255,.78)';
+
+let editColor = selectedColor;
+
+let editingId = null;
+
+let contextId = null;
+
+let mergeSource = null;
+
+let history = [];
+
+let drag = null;
+
+let longTimer = null;
+
+let longTriggered = false;
+
+let suppressClick = false;
+
+const $ = id => document.getElementById(id);
+
+const uid = () => Math.random().toString(36).slice(2,10);
+
+const COLORS = [
+
+ 'rgba(255,190,198,.76)',
+
+ 'rgba(255,218,169,.76)',
+
+ 'rgba(255,241,170,.78)',
+
+ 'rgba(190,231,207,.78)',
+
+ 'rgba(181,220,255,.78)',
+
+ 'rgba(207,197,255,.78)',
+
+ 'rgba(245,198,235,.78)',
+
+ 'rgba(204,213,225,.82)'
+
+];
+
+const defaultState = () => ({
+
+ version:1,
+
+ activeRoutineId:'r1',
+
+ routines:[{
+
+  id:'r1',name:'รูทีน 1',
+
+  activities:[],tray:[]
+
+ }]
+
+});
+
+function loadState() {
+
+ try {
+
+  const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+  if(s && s.version===1 && Array.isArray(s.routines) && s.routines.length) {
+
+   s.routines.forEach(r=>{
+
+    r.activities ??= [];
+
+    r.tray ??= [];
+
+   });
+
+   if(!s.routines.some(r=>r.id===s.activeRoutineId))
+
+    s.activeRoutineId=s.routines[0].id;
+
+   return s;
+
+  }
+
+ } catch(e) {}
+
+ return defaultState();
+
+}
+
+let state = loadState();
+
+function active() {
+
+ return state.routines.find(r=>r.id===state.activeRoutineId) || state.routines[0];
+
+}
+
+function snapshot() {
+
+ history.push(JSON.stringify(state));
+
+ if(history.length>60) history.shift();
+
+ $('undoBtn').disabled=false;
+
+}
+
+function save() {
+
+ try {
+
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+
+ } catch(e) {
+
+  setStatus('บันทึกไม่สำเร็จ: พื้นที่จัดเก็บ Safari อาจเต็ม');
+
+ }
+
+}
+
+function commit() {
+
+ save();
+
+ render();
+
+}
+
+function setStatus(t) {
+
+ $('status').textContent=t;
+
+}
+
+function timeText(m) {
+
+ m=Math.max(0,Math.min(DAY,m));
+
+ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+
+}
+
+function snap(v) {
+
+ return Math.round(v/STEP)*STEP;
+
+}
+
+function clamp(v,min,max) {
+
+ return Math.max(min,Math.min(max,v));
+
+}
+
+function makePalette(container,which) {
+
+ container.innerHTML='';
+
+ COLORS.forEach(c=>{
+
+  const b=document.createElement('button');
+
+  b.className='swatch'+
+
+   ((which==='main'?selectedColor:editColor)===c?' active':'');
+
+  b.style.background=c;
+
+  b.setAttribute('aria-label','เลือกสี');
+
+  b.addEventListener('click',()=>{
+
+   if(which==='main') selectedColor=c;
+
+   else editColor=c;
+
+   makePalette(container,which);
+
+  });
+
+  container.appendChild(b);
+
+ });
+
+}
+
+function renderTabs() {
+
+ const nav=$('tabs');
+
+ nav.innerHTML='';
+
+ state.routines.forEach(r=>{
+
+  const b=document.createElement('button');
+
+  b.className='tab'+(r.id===state.activeRoutineId?' active':'');
+
+  b.textContent=r.name;
+
+  b.addEventListener('click',()=>{
+
+   if(r.id===state.activeRoutineId) {
+
+    routineMenu(r);
+
+    return;
+
+   }
+
+   state.activeRoutineId=r.id;
+
+   mergeSource=null;
+
+   render();
+
+  });
+
+  b.addEventListener('contextmenu',e=>{
+
+   e.preventDefault();
+
+   routineMenu(r);
+
+  });
+
+  nav.appendChild(b);
+
+ });
+
+}
+
+function routineMenu(r) {
+
+ const choice=prompt(
+
+  'จัดการ "'+r.name+'": พิมพ์ rename / duplicate / delete'
+
+ );
+
+ if(!choice) return;
+
+ if(choice==='rename') {
+
+  const n=prompt('ชื่อรูทีน',r.name);
+
+  if(n && n.trim()) {
+
+   snapshot();
+
+   r.name=n.trim();
+
+   commit();
+
+  }
+
+ }
+
+ else if(choice==='duplicate') {
+
+  snapshot();
+
+  const copy=JSON.parse(JSON.stringify(r));
+
+  copy.id=uid();
+
+  copy.name=r.name+' (สำเนา)';
+
+  copy.activities.forEach(a=>a.id=uid());
+
+  copy.tray.forEach(a=>a.id=uid());
+
+  state.routines.push(copy);
+
+  state.activeRoutineId=copy.id;
+
+  commit();
+
+ }
+
+ else if(choice==='delete') {
+
+  if(state.routines.length===1) {
+
+   alert('ต้องเหลือรูทีนอย่างน้อย 1 รายการ');
+
+   return;
+
+  }
+
+  if(confirm('ลบรูทีน "'+r.name+'" ?')) {
+
+   snapshot();
+
+   state.routines=state.routines.filter(x=>x.id!==r.id);
+
+   if(state.activeRoutineId===r.id)
+
+    state.activeRoutineId=state.routines[0].id;
+
+   commit();
+
+  }
+
+ }
+
+}
+
+function renderHours() {
+
+ const h=$('hours');
+
+ h.innerHTML='';
+
+ for(let i=0;i<24;i++) {
+
+  const row=document.createElement('div');
+
+  row.className='hour-row';
+
+  const label=document.createElement('span');
+
+  label.className='hour-label';
+
+  label.textContent=String(i).padStart(2,'0')+':00';
+
+  row.appendChild(label);
+
+  const q=document.createElement('i');
+
+  q.className='quarter';
+
+  row.appendChild(q);
+
+  h.appendChild(row);
+
+ }
+
+}
+
+function layoutColumns(items) {
+
+ const sorted=[...items].sort((a,b)=>a.start-b.start||a.end-b.end);
+
+ let clusters=[],cluster=[],maxEnd=-1;
+
+ sorted.forEach(a=>{
+
+  if(cluster.length && a.start>=maxEnd) {
+
+   clusters.push(cluster);
+
+   cluster=[];
+
+   maxEnd=-1;
+
+  }
+
+  cluster.push(a);
+
+  maxEnd=Math.max(maxEnd,a.end);
+
+ });
+
+ if(cluster.length) clusters.push(cluster);
+
+ const result=new Map();
+
+ clusters.forEach(group=>{
+
+  let cols=[];
+
+  group.forEach(a=>{
+
+   let col=cols.findIndex(end=>end<=a.start);
+
+   if(col<0) {
+
+    col=cols.length;
+
+    cols.push(a.end);
+
+   } else {
+
+    cols[col]=a.end;
+
+   }
+
+   result.set(a.id,{col,total:0});
+
+  });
+
+  group.forEach(a=>{
+
+   result.get(a.id).total=cols.length;
+
+  });
+
+ });
+
+ return result;
+
+}
+
+function renderActivities() {
+
+ const root=$('activities');
+
+ root.innerHTML='';
+
+ const items=active().activities;
+
+ const cols=layoutColumns(items);
+
+ items.forEach(a=>{
+
+  const el=document.createElement('div');
+
+  el.className='activity';
+
+  el.dataset.id=a.id;
+
+  el.style.background=a.color;
+
+  const top=a.start/DAY*HOUR_HEIGHT*24;
+
+  const height=(a.end-a.start)/60*HOUR_HEIGHT;
+
+  el.style.top=top+'px';
+
+  el.style.height=Math.max(15,height)+'px';
+
+  const c=cols.get(a.id)||{col:0,total:1};
+
+  el.style.left=(c.col/c.total*100)+'%';
+
+  el.style.width=(100/c.total)+'%';
+
+  if(mergeSource===a.id) el.classList.add('selected');
+
+  const inner=document.createElement('div');
+
+  inner.className='inner';
+
+  const name=document.createElement('div');
+
+  name.className='name';
+
+  name.textContent=a.name;
+
+  const time=document.createElement('div');
+
+  time.className='time';
+
+  time.textContent=timeText(a.start)+' – '+timeText(a.end);
+
+  inner.append(name,time);
+
+  const topH=document.createElement('div');
+
+  topH.className='handle top';
+
+  topH.dataset.mode='top';
+
+  const bottomH=document.createElement('div');
+
+  bottomH.className='handle bottom';
+
+  bottomH.dataset.mode='bottom';
+
+  el.append(topH,inner,bottomH);
+
+  bindActivity(el,a);
+
+  root.appendChild(el);
+
+ });
+
+}
+
+function renderTray() {
+
+ const tray=$('tray');
+
+ tray.innerHTML='';
+
+ const items=active().tray;
+
+ $('trayCount').textContent=items.length+' กล่อง';
+
+ if(!items.length) {
+
+  tray.innerHTML='<div class="empty">ยังไม่มีกล่อง<br>สร้างกิจกรรมด้านบนได้เลย</div>';
+
+  return;
+
+ }
+
+ items.forEach(a=>{
+
+  const el=document.createElement('div');
+
+  el.className='tray-card';
+
+  el.dataset.id=a.id;
+
+  el.style.background=a.color;
+
+  const strong=document.createElement('strong');
+
+  strong.textContent=a.name;
+
+  const small=document.createElement('small');
+
+  small.textContent=(a.duration/60)+' ชม.';
+
+  el.append(strong,small);
+
+  el.addEventListener('pointerdown',e=>startTrayDrag(e,a,el));
+
+  tray.appendChild(el);
+
+ });
+
+}
+
+function renderCurrent() {
+
+ const line=$('currentLine');
+
+ line.style.display=$('nowToggle').checked?'block':'none';
+
+ if(line.style.display==='none') return;
+
+ const d=new Date();
+
+ const m=d.getHours()*60+d.getMinutes();
+
+ line.style.top=(m/60*HOUR_HEIGHT)+'px';
+
+ $('currentLabel').textContent=timeText(m);
+
+}
+
+function render() {
+
+ renderTabs();
+
+ renderActivities();
+
+ renderTray();
+
+ renderCurrent();
+
+ $('undoBtn').disabled=!history.length;
+
+ $('mergeBanner').classList.toggle('show',!!mergeSource);
+
+}
+
+function startActivityDrag(e,a,el,mode='move') {
+
+ if(e.button!==undefined && e.button!==0) return;
+
+ e.preventDefault();
+
+ if(mergeSource) {
+
+  if(a.id!==mergeSource) mergeActivities(a.id);
+
+  return;
+
+ }
+
+ if(mode==='move') {
+
+  longTriggered=false;
+
+  clearTimeout(longTimer);
+
+  longTimer=setTimeout(()=>{
+
+   longTriggered=true;
+
+   showContext(a.id,e.clientX,e.clientY);
+
+  },500);
+
+ }
+
+ drag={
+
+  kind:'activity',
+
+  id:a.id,
+
+  mode,
+
+  startY:e.clientY,
+
+  origStart:a.start,
+
+  origEnd:a.end,
+
+  lastY:e.clientY,
+
+  moved:false,
+
+  pointerId:e.pointerId,
+
+  before:JSON.stringify(state)
+
+ };
+
+ document.addEventListener('pointermove',movePointer);
+
+ document.addEventListener('pointerup',endPointer,{once:true});
+
+ try {el.setPointerCapture(e.pointerId)} catch(_) {}
+
+}
+
+function bindActivity(el,a) {
+
+ el.addEventListener('pointerdown',e=>{
+
+  const mode=e.target.dataset.mode||'move';
+
+  startActivityDrag(e,a,el,mode);
+
+ });
+
+ el.addEventListener('pointermove',movePointer);
+
+ el.addEventListener('pointerup',endPointer);
+
+ el.addEventListener('pointercancel',endPointer);
+
+ el.addEventListener('click',()=>{
+
+  if(suppressClick) {
+
+   suppressClick=false;
+
+   return;
+
+  }
+
+  if(!longTriggered && !mergeSource) openEdit(a.id);
+
+ });
+
+}
+
+function startTrayDrag(e,a,el) {
+
+ if(e.button!==undefined && e.button!==0) return;
+
+ e.preventDefault();
+
+ drag={
+
+  kind:'tray',
+
+  id:a.id,
+
+  activity:{...a},
+
+  startY:e.clientY,
+
+  lastY:e.clientY,
+
+  moved:false
+
+ };
+
+ try {el.setPointerCapture(e.pointerId)} catch(_) {}
+
+ document.addEventListener('pointermove',movePointer);
+
+ document.addEventListener('pointerup',endPointer,{once:true});
+
+}
+
+function movePointer(e) {
+
+ if(!drag) return;
+
+ const dy=e.clientY-drag.startY;
+
+ if(Math.abs(dy)>4) {
+
+  drag.moved=true;
+
+  clearTimeout(longTimer);
+
+  suppressClick=true;
+
+ }
+
+ drag.lastY=e.clientY;
+
+ if(drag.kind==='activity' && drag.moved) {
+
+  const a=active().activities.find(x=>x.id===drag.id);
+
+  if(!a) return;
+
+  const delta=snap(dy/HOUR_HEIGHT*60);
+
+  let start=drag.origStart;
+
+  let end=drag.origEnd;
+
+  if(drag.mode==='move') {
+
+   start=clamp(drag.origStart+delta,0,DAY-STEP);
+
+   end=start+(drag.origEnd-drag.origStart);
+
+   if(end>DAY) {
+
+    end=DAY;
+
+    start=end-(drag.origEnd-drag.origStart);
+
+   }
+
+  }
+
+  else if(drag.mode==='top') {
+
+   start=clamp(drag.origStart+delta,0,drag.origEnd-STEP);
+
+  }
+
+  else {
+
+   end=clamp(drag.origEnd+delta,drag.origStart+STEP,DAY);
+
+  }
+
+  a.start=start;
+
+  a.end=end;
+
+  renderActivities();
+
+ }
+
+ else if(drag.kind==='tray') {
+
+  showGhost(drag.activity,e.clientX,e.clientY);
+
+ }
+
+}
+
+function endPointer(e) {
+
+ if(!drag) return;
+
+ clearTimeout(longTimer);
+
+ const d=drag;
+
+ drag=null;
+
+ removeGhost();
+
+ if(d.kind==='activity' && d.moved) {
+
+  history.push(d.before);
+
+  if(history.length>60) history.shift();
+
+  save();
+
+  render();
+
+  const moved=active().activities.find(a=>a.id===d.id);
+
+  setStatus(moved?'ปรับเวลาเรียบร้อย · '+timeText(moved.start):'ปรับเวลาเรียบร้อย');
+
+ }
+
+ else if(d.kind==='tray') {
+
+  const target=document.elementFromPoint(e.clientX,e.clientY);
+
+  if(target && $('timeline').contains(target)) {
+
+   const rect=$('timeline').getBoundingClientRect();
+
+   const y=e.clientY-rect.top+$('timelineScroll').scrollTop;
+
+   const start=clamp(snap(y/HOUR_HEIGHT*60),0,DAY-STEP);
+
+   snapshot();
+
+   const a=d.activity;
+
+   active().activities.push({
+
+    id:uid(),
+
+    name:a.name,
+
+    color:a.color,
+
+    start,
+
+    end:Math.min(DAY,start+a.duration)
+
+   });
+
+   active().tray=active().tray.filter(x=>x.id!==d.id);
+
+   commit();
+
+   setStatus('วางกิจกรรมบนเส้นเวลาแล้ว');
+
+  }
+
+  else if(d.moved) {
+
+   setStatus('ลากกล่องไปวางในพื้นที่เส้นเวลา');
+
+  }
+
+ }
+
+ document.removeEventListener('pointermove',movePointer);
+
+ document.removeEventListener('pointerup',endPointer);
+
+}
+
+function showGhost(a,x,y) {
+
+ let g=$('ghost');
+
+ if(!g) {
+
+  g=document.createElement('div');
+
+  g.id='ghost';
+
+  g.className='drag-ghost';
+
+  document.body.appendChild(g);
+
+ }
+
+ g.textContent=a.name;
+
+ g.style.background=a.color;
+
+ g.style.left=(x+12)+'px';
+
+ g.style.top=(y+12)+'px';
+
+}
+
+function removeGhost() {
+
+ const g=$('ghost');
+
+ if(g) g.remove();
+
+}
+
+function showContext(id,x,y) {
+
+ contextId=id;
+
+ const m=$('contextMenu');
+
+ m.style.left=clamp(x,8,innerWidth-180)+'px';
+
+ m.style.top=clamp(y,8,innerHeight-150)+'px';
+
+ m.classList.add('show');
+
+}
+
+function hideContext() {
+
+ $('contextMenu').classList.remove('show');
+
+}
+
+$('mergeAction').onclick=()=>{
+
+ mergeSource=contextId;
+
+ hideContext();
+
+ render();
+
+ setStatus('เลือกกล่องที่ต้องการรวมเป็นกล่องที่สอง');
+
+};
+
+$('editAction').onclick=()=>{
+
+ hideContext();
+
+ openEdit(contextId);
+
+};
+
+$('deleteAction').onclick=()=>{
+
+ hideContext();
+
+ deleteActivity(contextId);
+
+};
+
+function mergeActivities(targetId) {
+
+ if(!mergeSource || targetId===mergeSource) return;
+
+ const arr=active().activities;
+
+ const a=arr.find(x=>x.id===mergeSource);
+
+ const b=arr.find(x=>x.id===targetId);
+
+ if(!a || !b) return;
+
+ snapshot();
+
+ const start=Math.min(a.start,b.start);
+
+ const end=Math.max(a.end,b.end);
+
+ const name=a.name+'+'+b.name;
+
+ const color=a.color;
+
+ active().activities=arr.filter(
+
+  x=>x.id!==a.id && x.id!==b.id
+
+ );
+
+ const merged={
+
+  id:uid(),
+
+  name,
+
+  color,
+
+  start,
+
+  end
+
+ };
+
+ active().activities.push(merged);
+
+ mergeSource=null;
+
+ commit();
+
+ openEdit(merged.id);
+
+ setStatus('รวมกล่องแล้ว — ตั้งชื่อใหม่ได้ทันที');
+
+}
+
+$('mergeBanner').addEventListener('click',()=>{
+
+ mergeSource=null;
+
+ render();
+
+ setStatus('ยกเลิกโหมดรวมกล่องแล้ว');
+
+});
+
+function openEdit(id) {
+
+ const a=active().activities.find(x=>x.id===id);
+
+ if(!a) return;
+
+ editingId=id;
+
+ editColor=a.color;
+
+ $('editName').value=a.name;
+
+ $('editStart').value=timeText(a.start);
+
+ $('editDuration').value=a.end-a.start;
+
+ makePalette($('editPalette'),'edit');
+
+ $('editOverlay').classList.add('show');
+
+}
+
+function closeEdit() {
+
+ $('editOverlay').classList.remove('show');
+
+ editingId=null;
+
+}
+
+$('closeEdit').onclick=closeEdit;
+
+$('editOverlay').addEventListener('click',e=>{
+
+ if(e.target===$('editOverlay')) closeEdit();
+
+});
+
+$('saveEdit').onclick=()=>{
+
+ const a=active().activities.find(x=>x.id===editingId);
+
+ if(!a) return;
+
+ const name=$('editName').value.trim();
+
+ const [h,m]=($('editStart').value||'00:00').split(':').map(Number);
+
+ const start=snap(h*60+m);
+
+ const duration=clamp(snap(Number($('editDuration').value)||15),15,DAY);
+
+ snapshot();
+
+ a.name=name||'กิจกรรม';
+
+ a.color=editColor;
+
+ a.start=clamp(start,0,DAY-15);
+
+ a.end=Math.min(DAY,a.start+duration);
+
+ closeEdit();
+
+ commit();
+
+};
+
+$('deleteActivity').onclick=()=>{
+
+ if(!editingId) return;
+
+ deleteActivity(editingId);
+
+ closeEdit();
+
+};
+
+function deleteActivity(id) {
+
+ if(!active().activities.some(a=>a.id===id)) return;
+
+ if(!confirm('ลบกิจกรรมนี้ใช่ไหม?')) return;
+
+ snapshot();
+
+ active().activities=active().activities.filter(a=>a.id!==id);
+
+ commit();
+
+}
+
+$('bakeBtn').onclick=()=>{
+
+ const name=$('activityName').value.trim();
+
+ if(!name) {
+
+  alert('กรุณากรอกชื่อกิจกรรม');
+
+  $('activityName').focus();
+
+  return;
+
+ }
+
+ let h=clamp(Number($('hoursInput').value)||0,0,24);
+
+ let m=Number($('minutesInput').value)||0;
+
+ m=clamp(Math.round(m/15)*15,0,45);
+
+ let duration=snap(h*60+m);
+
+ if(duration<15) {
+
+  alert('ระยะเวลาต้องอย่างน้อย 15 นาที');
+
+  return;
+
+ }
+
+ snapshot();
+
+ active().tray.push({
+
+  id:uid(),
+
+  name,
+
+  color:selectedColor,
+
+  duration:Math.min(DAY,duration)
+
+ });
+
+ $('activityName').value='';
+
+ commit();
+
+ setStatus('อบกล่องสำเร็จ! ลากจากถาดไปวางบนเส้นเวลาได้เลย');
+
+};
+
+$('newTabBtn').onclick=()=>{
+
+ snapshot();
+
+ const n=state.routines.length+1;
+
+ const r={
+
+  id:uid(),
+
+  name:'รูทีน '+n,
+
+  activities:[],
+
+  tray:[]
+
+ };
+
+ state.routines.push(r);
+
+ state.activeRoutineId=r.id;
+
+ commit();
+
+ const rename=confirm('สร้างรูทีนใหม่แล้ว ต้องการเปลี่ยนชื่อเลยไหม?');
+
+ if(rename) {
+
+  const name=prompt('ชื่อรูทีน',r.name);
+
+  if(name && name.trim()) {
+
+   snapshot();
+
+   r.name=name.trim();
+
+   commit();
+
+  }
+
+ }
+
+};
+
+$('undoBtn').onclick=()=>{
+
+ if(!history.length) return;
+
+ state=JSON.parse(history.pop());
+
+ save();
+
+ render();
+
+ setStatus('ย้อนกลับการกระทำล่าสุดแล้ว');
+
+};
+
+$('nowToggle').onchange=renderCurrent;
+
+makePalette($('palette'),'main');
+
+renderHours();
+
+render();
+
+setInterval(renderCurrent,30000);
+
+document.addEventListener('pointerup',endPointer);
+
+document.addEventListener('keydown',e=>{
+
+ if(e.key==='Escape') {
+
+  hideContext();
+
+  if(mergeSource) {
+
+   mergeSource=null;
+
+   render();
+
+  }
+
+  closeEdit();
+
+ }
+
+});
+
+document.addEventListener('pointerdown',e=>{
+
+ if(!$('contextMenu').contains(e.target)) hideContext();
+
+});
+
+})();
+
+</script>
+
+</body>
+
+</html>
