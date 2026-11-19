@@ -106,6 +106,23 @@ button.primary {background:#657ee8;color:white;border-color:#657ee8}
 
 button.danger {color:#c14c64}
 
+  button.active-mode {
+  background:#657ee8;
+  color:white;
+  border-color:#657ee8;
+}
+
+/* ล็อกการเลื่อนหน้าจอเมื่ออยู่ในโหมดปรับเวลากิจกรรม */
+body.edit-time-mode .timeline-container {
+  overflow-y:hidden;
+  touch-action:none;
+}
+
+/* บล็อกการลากปรับเวลาเมื่ออยู่ในโหมดเลื่อนหน้าจอ */
+body:not(.edit-time-mode) .activity-block {
+  pointer-events:none;
+}
+
 .toggle {
 
   display:flex;align-items:center;gap:6px;
