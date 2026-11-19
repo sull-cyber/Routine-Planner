@@ -1924,6 +1924,38 @@ document.addEventListener('pointerdown',e=>{
 
 })();
 
+  // --- 1. ระบบซ่อน-แสดงเครื่องทำเค้ก ---
+const toggleCakeBtn = document.getElementById('toggle-cake-btn');
+const cakeBox = document.querySelector('#cake-maker'); // ⚠️ เปลี่ยนเป็น id หรือ .class กล่องเครื่องทำเค้กของซุล
+
+if (toggleCakeBtn && cakeBox) {
+  toggleCakeBtn.addEventListener('click', () => {
+    const isHidden = cakeBox.style.display === 'none';
+    cakeBox.style.display = isHidden ? '' : 'none';
+    toggleCakeBtn.textContent = isHidden ? '🎂 ซ่อนเครื่องทำเค้ก' : '🎂 แสดงเครื่องทำเค้ก';
+  });
+}
+
+// --- 2. ระบบสลับโหมดเลื่อนหน้าจอ vs โหมดปรับเวลากิจกรรม ---
+const toggleModeBtn = document.getElementById('toggle-mode-btn');
+let isEditTimeMode = false;
+
+if (toggleModeBtn) {
+  toggleModeBtn.addEventListener('click', () => {
+    isEditTimeMode = !isEditTimeMode;
+
+    if (isEditTimeMode) {
+      document.body.classList.add('edit-time-mode');
+      toggleModeBtn.classList.add('active-mode');
+      toggleModeBtn.textContent = '⏱️ โหมดปรับเวลา';
+    } else {
+      document.body.classList.remove('edit-time-mode');
+      toggleModeBtn.classList.remove('active-mode');
+      toggleModeBtn.textContent = '🖐️ โหมดเลื่อนหน้าจอ';
+    }
+  });
+}
+
 </script>
 
 </body>
